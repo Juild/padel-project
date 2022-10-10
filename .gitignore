@@ -7,6 +7,6 @@
 
 # Local History for Visual Studio Code
 .history/
-datasets/annotations/*.json
+./datasets/annotations/*
 # Built Visual Studio Code Extensions
 *.vsix
