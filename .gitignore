@@ -10,3 +10,4 @@
 ./datasets/annotations/*
 # Built Visual Studio Code Extensions
 *.vsix
+*.pyc

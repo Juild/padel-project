@@ -3,21 +3,16 @@ from torch.utils.data import Dataset
 from torch import nn
 
 #TODO Define custom model
-class ObjectDetector(nn.Module):
+class BoxRegressor(nn.Module):
     def __init__(self, base_model, num_classes) -> None:
         super().__init__()
-        self.base_model = base_model
         self.regressor = nn.Sequential(
-            nn.Linear(base_model.fc.in_features, 128), 
+            nn.Conv2d(in_channels=3, out_channels=3, kernel_size=10),
             nn.ReLU(),
-            nn.Linear(128, 64),
-            nn.ReLU(),
-            nn.Linear(32, 4),
+            nn.Flatten(end_dim=1),
+            nn.Linear(in_features=3*3*1080*1920, out_features=4),
             nn.Sigmoid()
-            
         )
-		# set the classifier of our base model to produce outputs
-		# from the last convolution block
-        self.base_model.fc = nn.Identity()
+
     def forward(self, x):
         return self.regressor(x)

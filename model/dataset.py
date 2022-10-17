@@ -29,6 +29,7 @@ class ImageDataset(Dataset):
             image = torch.tensor(image, dtype=float).permute(1,0,2) # (X, Y, RGB) (W,H,RGB) we do this to match with the bboxes coordinates (x,y)
             image = (image * 2)/255. - 1 # normalization [-1, 1]
             self.images.append(image)
+            f.close()
         # Compute the mean and std of the dataset to perform standarization
         stack = torch.stack(tuple(self.images))
         self.means = []
@@ -48,5 +49,5 @@ class ImageDataset(Dataset):
         else:
             return (self.images[idx], self.image_bboxes[idx])
     def __len__(self):
-        return self.images.size(0)
+        return len(self.images)
 
