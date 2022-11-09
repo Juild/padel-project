@@ -1,15 +1,16 @@
 
 from torch.utils.data import Dataset
+from torchvision.transforms import Compose
 import torch
 import cv2
 import os
 import json
 from typing import Dict, List
-
+from torch import Tensor
 class ImageDataset(Dataset):
     def __init__(self, annotations_path, images_path, channels, transforms=None) -> None:
-        self.transforms = transforms
-        self.images: List[torch.Tensor] = []
+        self.transforms: Compose = transforms
+        self.images: List[Tensor] = []
         self.image_bboxes: List[Dict] = []
         
         annotations_files = os.listdir(annotations_path)
