@@ -13,5 +13,5 @@
 *.pyc
 .frames/*.jpg
 *.mp4
-*./frames
-*./annotations
+/frames
+/annotations
