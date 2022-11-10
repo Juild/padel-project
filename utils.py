@@ -1,4 +1,4 @@
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 from torch import Tensor
 import torch
 import cv2
@@ -6,7 +6,7 @@ import os
 import json
 import numpy as np
 
-def import_data(annotations_path, images_path, channels):
+def import_data(annotations_path: str, images_path: str, channels: int) -> Union[Tensor, Tensor, Tuple, Tuple]:
     # List containing each image in a Tensor form (W, H, R, G, B)
     images: List[Tensor] = []
     # List containing tuples where each tuple represents a bbox for 1 image (x0, y0, x1, y0)
