@@ -12,24 +12,23 @@ import logging
 
 logging.basicConfig(filename='./debug.log', filemode='w', level='DEBUG')
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-
+sys.stdout.write(f'Using device: {DEVICE}\n')
 
 images, bboxes, means, stds = import_data(
     annotations_path="./datasets/annotations_yolo/",
     images_path="./frames/",
     channels=3
 )
-
+print(images[0].size())
 train_dataset = ds.ImageDataset(
     images,
     bboxes=bboxes,
-    transforms=transforms.ToTensor(),
-    target_transforms=transforms.ToTensor()
+    transforms=transforms.Normalize(means, stds)
 )
 
 train_loader = DataLoader(
     train_dataset,
-    batch_size=len(train_dataset.images),
+    batch_size=4,
     shuffle=True,
     num_workers=1
     )
@@ -38,7 +37,7 @@ train_loader = DataLoader(
 #TODO Read: https://d2l.ai/chapter_computer-vision/anchor.html
 
 
-resnet = resnet50(pretrained=True, weights=ResNet50_Weigths.DEFAULT)
+resnet = resnet50(pretrained=True)
 for param in resnet.parameters():
     param.requires_grad = False
 
@@ -47,17 +46,18 @@ bbox_loss_func = torch.nn.MSELoss()
 opt = torch.optim.Adam(model.parameters(), lr=.01)
 train_loss = []
 logging.info('before for loop')
-for epoch in range(1):
+for epoch in range(50):
     model.train()
     loss = 0
     logging.info('inside for loop 1')
-   # for (images, bboxes) in train_loader:
-        #continue
-        # logging.info('inside for loop')
-        # (images, bboxes) = (images.to(DEVICE), bboxes.to(DEVICE))
-        # predictions = model(images)
-        # bbox_loss = bbox_loss_func(predictions, bboxes)
-        # loss += bbox_loss
-        # opt.zero_grad()
-        # train_loss.backward()
-        # opt.step()
+    for (images, bboxes) in train_loader:
+        logging.info('inside for loop')
+        (images, bboxes) = (images.to(DEVICE, dtype=torch.float), bboxes.to(DEVICE, torch.float))
+        predictions = model(images)
+        bbox_loss = bbox_loss_func(predictions, bboxes)
+        loss += bbox_loss
+        opt.zero_grad()
+        bbox_loss.backward()
+        opt.step()
+        print(loss)
+        print(predictions)

@@ -50,4 +50,8 @@ def import_data(annotations_path: str, images_path: str, channels: int) -> Union
         stds.append(
             float(channel_stack.std())
             )
-    return torch.concat(images), torch.tensor(bboxes), tuple(means), tuple(stds)
+        # https://pytorch.org/docs/stable/generated/torch.stack.html#torch-stack
+        # Documentation on torch.stack, concatenates a sequence of tensors along a new dimension
+    with open('bboxes_normalized.txt', 'w') as f:
+        f.write(str(bboxes))
+    return torch.stack(images), torch.tensor(bboxes), tuple(means), tuple(stds)
