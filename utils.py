@@ -13,7 +13,7 @@ def import_data(annotations_path: str, images_path: str, channels: int) -> Union
     bboxes: List[Tuple] = []
     
 
-    annotations_files = os.listdir(annotations_path)
+    annotations_files: List[str] = os.listdir(annotations_path)
     for json_file_name in annotations_files:
         file_path = annotations_path + json_file_name
         with open(file_path, 'r') as f:
@@ -22,13 +22,14 @@ def import_data(annotations_path: str, images_path: str, channels: int) -> Union
             #Images
             image = cv2.imread(images_path + annotation["image"])
             image = torch.tensor(image, dtype=float).permute(1,0,2) # (X, Y, RGB) (W,H,RGB) we do this to match with the bboxes coordinates (x,y)
-            print(image.shape[:2])
             (w, h) = image.shape[:2]
             image = (image * 2)/255. - 1 # normalization [-1, 1]
             images.append(image)
 
             # Bounding boxes
+            # [0] becasue "annoations" object is a list and we there's only one bounding box
             bbox = annotation['annotations'][0]["coordinates"] # {x, y, width, height}
+
             # Normalize bounding boxes too
             x0 = bbox['x'] / w
             y0 = bbox['y'] / h 
@@ -38,15 +39,15 @@ def import_data(annotations_path: str, images_path: str, channels: int) -> Union
 
         # Compute the mean and std of the dataset to perform standarization
         # Using tuple because list wasn't working
-        stack = torch.stack(tuple(images))
-        means = []
-        stds = []
-        for channel in range(channels):
-            channel_stack: torch.Tensor = stack[:, :, :, channel].reshape(stack.shape[0] * stack.shape[1] * stack.shape[2])
-            means.append(
-                float(channel_stack.mean())
-                )
-            stds.append(
-                float(channel_stack.std())
-                )
-        return torch.tensor(images), torch.tensor(bboxes), tuple(means), tuple(stds)
+    stack = torch.stack(tuple(images))
+    means = []
+    stds = []
+    for channel in range(channels):
+        channel_stack: torch.Tensor = stack[:, :, :, channel].reshape(stack.shape[0] * stack.shape[1] * stack.shape[2])
+        means.append(
+            float(channel_stack.mean())
+            )
+        stds.append(
+            float(channel_stack.std())
+            )
+    return torch.concat(images), torch.tensor(bboxes), tuple(means), tuple(stds)

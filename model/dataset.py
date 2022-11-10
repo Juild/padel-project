@@ -11,12 +11,12 @@ class ImageDataset(Dataset):
         # Datapoint index is the first one
         # i.e. tensor(image_0: tensor, image_1: tensor,... , image_n: tensor)
         # where n is the number of images (datapoints)
-        self.images = images
+        self.images: Tensor[Tensor] = images
         # Datapoint index is the first one
         # i.e. tensor(bbox_0 : tensor, bbox_1: tensor,... , bbox_n: tensor)
         # where n is the number of images (datapoints) each bbox is associated respectively
         # with the image in the same index in self.images tensor.
-        self.bboxes = bboxes
+        self.bboxes: Tuple[Tuple] = bboxes
 
     def __getitem__(self, idx): 
         image = self.images[idx]
