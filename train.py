@@ -60,4 +60,5 @@ for epoch in range(50):
         bbox_loss.backward()
         opt.step()
         print(loss)
-        print(predictions)
+        print("Real ", bboxes)
+        print("Predicted ", predictions)

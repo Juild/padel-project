@@ -18,7 +18,7 @@ def import_data(annotations_path: str, images_path: str, channels: int) -> Union
         file_path = annotations_path + json_file_name
         with open(file_path, 'r') as f:
             annotation: Dict = json.load(f)[0] # as it is a list with one element the dict
-
+            print(1)
             #Images
             image = cv2.imread(images_path + annotation["image"])
             image = torch.tensor(image, dtype=float).permute(1,0,2) # (X, Y, RGB) (W,H,RGB) we do this to match with the bboxes coordinates (x,y)
@@ -52,6 +52,7 @@ def import_data(annotations_path: str, images_path: str, channels: int) -> Union
             )
         # https://pytorch.org/docs/stable/generated/torch.stack.html#torch-stack
         # Documentation on torch.stack, concatenates a sequence of tensors along a new dimension
+        print(len(bboxes))
     with open('bboxes_normalized.txt', 'w') as f:
         f.write(str(bboxes))
     return torch.stack(images), torch.tensor(bboxes), tuple(means), tuple(stds)
