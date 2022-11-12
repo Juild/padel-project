@@ -55,7 +55,7 @@ mse_loss_func = torch.nn.MSELoss()
 opt = torch.optim.Adam(model.parameters(), lr=.001)
 train_loss = []
 epochs = 10
-
+# Number of "virtual batches"
 accum_itr = 32
 for epoch in range(epochs):
     model.train()
@@ -66,17 +66,21 @@ for epoch in range(epochs):
         iou_loss: Tensor = box_iou(predictions, bboxes).mean()
         mse_loss: Tensor = mse_loss_func(predictions, bboxes)
         total_loss: Tensor = mse_loss + iou_loss
-        print(total_loss)
         print(predictions)
-        if (epoch - 1) % 32 == 0  or epoch + 1 == len(train_loader):
+        print(total_loss)
+        if (epoch - 1) % accum_itr == 0  or epoch + 1 == len(train_loader):
             opt.zero_grad()
             total_loss.backward()
             opt.step()
 
         loss += float(total_loss)/accum_itr
     train_loss.append(loss)
+
+
 sns.lineplot(list(range(epochs)),train_loss)
 plt.show()
 
+# Add evaluation loop
+# Add model saving
 
 
