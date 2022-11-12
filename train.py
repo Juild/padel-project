@@ -1,3 +1,4 @@
+from torch import Tensor
 import sys
 sys.path.append("..")
 from model import model
@@ -9,9 +10,16 @@ from torchvision import transforms
 from utils import import_data 
 from torchvision.models import resnet50
 import logging
+from torchmetrics import JaccardIndex
+from torchvision.ops import box_iou, generalized_box_iou_loss
+import seaborn as sns
+import matplotlib.pyplot as plt
+import cv2
 
 logging.basicConfig(filename='./debug.log', filemode='w', level='DEBUG')
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+PIN_MEMORY = True if DEVICE == "cuda" else False
+
 sys.stdout.write(f'Using device: {DEVICE}\n')
 
 images, bboxes, means, stds = import_data(
@@ -30,7 +38,8 @@ train_loader = DataLoader(
     train_dataset,
     batch_size=4,
     shuffle=True,
-    num_workers=1
+    num_workers=os.cpu_count(),
+    pin_memory=PIN_MEMORY
     )
 
 
@@ -42,23 +51,29 @@ for param in resnet.parameters():
     param.requires_grad = False
 
 model = model.BoxRegressor(base_model=resnet).to(DEVICE)
-bbox_loss_func = torch.nn.MSELoss()
-opt = torch.optim.Adam(model.parameters(), lr=.01)
+mse_loss_func = torch.nn.MSELoss()
+opt = torch.optim.Adam(model.parameters(), lr=.001)
 train_loss = []
-logging.info('before for loop')
-for epoch in range(50):
+epochs = 100
+for epoch in range(epochs):
     model.train()
-    loss = 0
-    logging.info('inside for loop 1')
+    loss: float = 0
     for (images, bboxes) in train_loader:
-        logging.info('inside for loop')
         (images, bboxes) = (images.to(DEVICE, dtype=torch.float), bboxes.to(DEVICE, torch.float))
-        predictions = model(images)
-        bbox_loss = bbox_loss_func(predictions, bboxes)
-        loss += bbox_loss
+        predictions: Tensor = model(images)
+        iou_loss: Tensor = box_iou(predictions, bboxes).sum()
+        mse_loss: Tensor = mse_loss_func(predictions, bboxes)
+        total_loss: Tensor = mse_loss + iou_loss
+        print(total_loss)
+        print(predictions)
         opt.zero_grad()
-        bbox_loss.backward()
+        total_loss.backward()
         opt.step()
-        print(loss)
-        print("Real ", bboxes)
-        print("Predicted ", predictions)
+
+        loss += float(total_loss)
+    train_loss.append(loss)
+sns.lineplot(list(range(epochs)),train_loss)
+plt.show()
+
+
+
