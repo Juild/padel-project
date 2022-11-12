@@ -36,7 +36,7 @@ train_dataset = ds.ImageDataset(
 
 train_loader = DataLoader(
     train_dataset,
-    batch_size=4,
+    batch_size=2,
     shuffle=True,
     num_workers=os.cpu_count(),
     pin_memory=PIN_MEMORY
@@ -54,23 +54,26 @@ model = model.BoxRegressor(base_model=resnet).to(DEVICE)
 mse_loss_func = torch.nn.MSELoss()
 opt = torch.optim.Adam(model.parameters(), lr=.001)
 train_loss = []
-epochs = 100
+epochs = 10
+
+accum_itr = 32
 for epoch in range(epochs):
     model.train()
     loss: float = 0
     for (images, bboxes) in train_loader:
         (images, bboxes) = (images.to(DEVICE, dtype=torch.float), bboxes.to(DEVICE, torch.float))
         predictions: Tensor = model(images)
-        iou_loss: Tensor = box_iou(predictions, bboxes).sum()
+        iou_loss: Tensor = box_iou(predictions, bboxes).mean()
         mse_loss: Tensor = mse_loss_func(predictions, bboxes)
         total_loss: Tensor = mse_loss + iou_loss
         print(total_loss)
         print(predictions)
-        opt.zero_grad()
-        total_loss.backward()
-        opt.step()
+        if (epoch - 1) % 32 == 0  or epoch + 1 == len(train_loader):
+            opt.zero_grad()
+            total_loss.backward()
+            opt.step()
 
-        loss += float(total_loss)
+        loss += float(total_loss)/accum_itr
     train_loss.append(loss)
 sns.lineplot(list(range(epochs)),train_loss)
 plt.show()
