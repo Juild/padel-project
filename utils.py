@@ -6,13 +6,12 @@ import os
 import json
 import numpy as np
 
-def import_data(annotations_path: str, images_path: str, channels: int) -> Union[Tensor, Tensor, Tuple, Tuple]:
+def import_data(annotations_path: str, images_path: str) -> Union[Tensor, Tensor, Tuple, Tuple]:
     # List containing each image in a Tensor form (W, H, R, G, B)
     images: List[Tensor] = []
     # List containing tuples where each tuple represents a bbox for 1 image (x0, y0, x1, y0)
     bboxes: List[Tuple] = []
     
-
     annotations_files: List[str] = os.listdir(annotations_path)
     for json_file_name in annotations_files:
         file_path = annotations_path + json_file_name
@@ -20,11 +19,12 @@ def import_data(annotations_path: str, images_path: str, channels: int) -> Union
             annotation: Dict = json.load(f)[0] # as it is a list with one element the dict
             #Images
             image = cv2.imread(images_path + annotation["image"])
+
             image = torch.tensor(image, dtype=float).permute(1,0,2) # (X, Y, RGB) (W,H,RGB) we do this to match with the bboxes coordinates (x,y)
             (w, h) = image.shape[:2]
             image = (image * 2)/255. - 1 # normalization [-1, 1]
             images.append(image)
-
+                    
             # Bounding boxes
             # [0] becasue "annoations" object is a list and we there's only one bounding box
             bbox = annotation['annotations'][0]["coordinates"] # {x, y, width, height}
@@ -36,13 +36,12 @@ def import_data(annotations_path: str, images_path: str, channels: int) -> Union
             y1 = y0 + bbox['height'] / h
             bboxes.append((x0, y0, x1, y1))
 
-        # Compute the mean and std of the dataset to perform standarization
-        # Using tuple because list wasn't working
-    stack = torch.stack(tuple(images))
+    images = torch.stack(images)
     means = []
     stds = []
-    for channel in range(channels):
-        channel_stack: torch.Tensor = stack[:, :, :, channel].reshape(stack.shape[0] * stack.shape[1] * stack.shape[2])
+    # three channels rgb
+    for channel in range(3):
+        channel_stack: torch.Tensor = images[:, :, :, channel].reshape(images.shape[0] * images.shape[1] * images.shape[2])
         means.append(
             float(channel_stack.mean())
             )
@@ -51,5 +50,5 @@ def import_data(annotations_path: str, images_path: str, channels: int) -> Union
             )
         # https://pytorch.org/docs/stable/generated/torch.stack.html#torch-stack
         # Documentation on torch.stack, concatenates a sequence of tensors along a new dimension
-
-    return torch.stack(images), torch.tensor(bboxes), tuple(means), tuple(stds)
+    print(means, stds)
+    return images, torch.tensor(bboxes), tuple(means), tuple(stds)
