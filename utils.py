@@ -19,21 +19,28 @@ def import_data(annotations_path: str, images_path: str) -> Union[Tensor, Tensor
             annotation: Dict = json.load(f)[0] # as it is a list with one element the dict
             #Images
             image = cv2.imread(images_path + annotation["image"])
-
-            image = torch.tensor(image, dtype=float).permute(1,0,2) # (X, Y, RGB) (W,H,RGB) we do this to match with the bboxes coordinates (x,y)
-            (w, h) = image.shape[:2]
+            image = torch.tensor(image, dtype=float)# (Y: 1080, X: 1920, RGB) (W,H,RGB) we do this to match with the bboxes coordinates (x,y)
+            (h, w) = image.shape[:2]
             image = (image * 2)/255. - 1 # normalization [-1, 1]
             images.append(image)
-                    
+            
             # Bounding boxes
             # [0] becasue "annoations" object is a list and we there's only one bounding box
             bbox = annotation['annotations'][0]["coordinates"] # {x, y, width, height}
 
             # Normalize bounding boxes too
-            x0 = bbox['x'] / w
-            y0 = bbox['y'] / h 
-            x1 = x0 + bbox['width'] / w
-            y1 = y0 + bbox['height'] / h
+            x0 = ( bbox['x'] - bbox['width']/2. )/ w
+            y0 = ( bbox['y'] - bbox['height']/2. ) / h 
+            x1 = ( bbox['x'] + bbox['width']/2. ) / w
+            y1 = ( bbox['y'] + bbox['height']/2. ) / h
+            # print(y1)
+            # print(x0 * 1920, y0 * 1080, x1 *1920, y1*1080)
+            # print(image.shape)
+            # image = cv2.rectangle(image_cv, (int(x0 * 1920), int(y0 * 1080)), (int(x1 * 1920), int(y1 * 1080)), (0, 0, 255), 5)
+            # cv2.imshow('img', image_cv)
+            # cv2.waitKey(0)
+            # cv2.destroyAllWindows()
+            # sys.exit()
             bboxes.append((x0, y0, x1, y1))
 
     images = torch.stack(images)

@@ -27,18 +27,18 @@ def train_model(train_loader, loss_func, learning_rate, epochs, virtual_batches)
     for epoch in range(epochs):
         print(f'Epoch: {epoch}')
         model.train()
-        loss: float = 0
+        loss = 0
         batch_idx = 0
         for (images, bboxes) in train_loader:
             images, bboxes = images.to(config.DEVICE, dtype=torch.float), bboxes.to(config.DEVICE, torch.float)
             predicted_bboxes: Tensor = model(images)
             total_loss: Tensor = loss_func(predicted_bboxes, bboxes)
-            loss += float(total_loss)/virtual_batches
+            loss += total_loss
             accum_itr += 1
             if accum_itr % virtual_batches == 0 or accum_itr == len(train_loader ) * train_loader.batch_size:
                 print(f'Loss: {float(total_loss)}')
-                opt.zero_grad()
                 total_loss.backward()
+                opt.zero_grad()
                 opt.step()
         train_loss.append(loss)
 
@@ -54,6 +54,8 @@ def  evaluate_model(model, loss_func, data_loader, device):
             images, target_bboxes = images.to(device, dtype=torch.float), bboxes.to(device, dtype=torch.float)
             # forward pass
             predicted_bboxes: Tensor = model(images)
+            for box in predicted_bboxes:
+                 print(predicted_bboxes)
             loss: Tensor = loss_func(predicted_bboxes, target_bboxes)
             eval_loss += float(loss)
         loss_history.append(eval_loss)
@@ -69,7 +71,6 @@ print(f'Using device: {config.DEVICE}')
 images, bboxes, means, stds = import_data(
     annotations_path="./datasets/annotations_yolo/",
     images_path="./frames/",
-    channels=3
 )
 print(f'Using device: {config.DEVICE}')
 print(f'Creating Dataset')
@@ -82,15 +83,15 @@ train_dataset = ds.ImageDataset(
 print(f'Creating dataloader')
 train_loader = DataLoader(
     train_dataset,
-    batch_size=2,
+    batch_size=1,
     shuffle=True,
     num_workers=os.cpu_count(),
     pin_memory=config.PIN_MEMORY
     )
 
-loss_func = lambda x, y: mse_loss(x, y) + box_iou(x, y).mean()
+loss_func = lambda x, y: generalized_box_iou_loss(x, y).mean()
 # Training
-epochs = 40
+epochs = 100
 batches = 32
 model, train_loss = train_model(train_loader, loss_func=loss_func, learning_rate=.01, epochs=epochs, virtual_batches=batches)
 
