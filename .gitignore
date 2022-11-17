@@ -17,7 +17,7 @@
 *.log
 *.txt
 *.pth
-/figures/*
+figures/*.jpg
 /exploration/*
 /__pycache__
 /.mypy_cache
