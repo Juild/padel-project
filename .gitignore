@@ -13,7 +13,7 @@
 *.pyc
 .frames/*.jpg
 *.mp4
-./frames/*
+/frames/*
 *.log
 *.txt
 *.pth
