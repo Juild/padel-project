@@ -18,7 +18,7 @@
 *.txt
 *.pth
 ./figures/*
-./exploration/*
+/exploration/*
 /__pycache__
 /.mypy_cache
-./predictions/*
+/predictions/*
