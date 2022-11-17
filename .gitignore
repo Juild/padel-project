@@ -13,4 +13,12 @@
 *.pyc
 .frames/*.jpg
 *.mp4
-/frames
+./frames/*
+*.log
+*.txt
+*.pth
+./figures/*
+./exploration/*
+/__pycache__
+/.mypy_cache
+./predictions/*
