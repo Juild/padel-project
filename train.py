@@ -9,13 +9,13 @@ import os
 import torch
 from torchvision import transforms
 from utils import import_data 
-from torchvision.models import resnet50, resnet18
-from torchvision.ops import box_iou, generalized_box_iou_loss
+from torchvision.models import resnet50
+from torchvision.ops import generalized_box_iou_loss
 from torch.nn.functional import mse_loss
 import matplotlib.pyplot as plt
 
 def train_model(train_loader, loss_func, learning_rate, epochs, virtual_batches):
-    resnet = resnet50(pretrained=True)
+    resnet = resnet50(weights='DEFAULT')
     for param in resnet.parameters():
         param.requires_grad = False
     model = BoxRegressor(base_model=resnet).to(config.DEVICE)
@@ -57,8 +57,8 @@ def  evaluate_model(model, loss_func, data_loader, device):
             for box in predicted_bboxes:
                  print(predicted_bboxes)
             loss: Tensor = loss_func(predicted_bboxes, target_bboxes)
-            eval_loss += float(loss)
-        loss_history.append(eval_loss)
+            eval_loss += loss
+        loss_history.append(float(eval_loss))
 
 def save_model(model, path):
     print(f"Saving model at {path}")
@@ -89,6 +89,7 @@ train_loader = DataLoader(
     pin_memory=config.PIN_MEMORY
     )
 
+# x: features , y: targets
 loss_func = lambda x, y: generalized_box_iou_loss(x, y).mean()
 # Training
 epochs = 100
