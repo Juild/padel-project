@@ -19,6 +19,7 @@ def import_data(annotations_path: str, images_path: str) -> Union[Tensor, Tensor
             annotation: Dict = json.load(f)[0] # as it is a list with one element the dict
             #Images
             image = cv2.imread(images_path + annotation["image"])
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
             image = torch.tensor(image, dtype=float)# (Y: 1080, X: 1920, RGB) (W,H,RGB) we do this to match with the bboxes coordinates (x,y)
             (h, w) = image.shape[:2]
             image = (image * 2)/255. - 1 # normalization [-1, 1]
