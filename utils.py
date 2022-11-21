@@ -1,5 +1,6 @@
 from typing import Dict, List, Tuple, Union
 from torch import Tensor
+from torchvision import transforms
 import torch
 import cv2
 import os
@@ -19,8 +20,10 @@ def import_data(annotations_path: str, images_path: str) -> Union[Tensor, Tensor
             annotation: Dict = json.load(f)[0] # as it is a list with one element the dict
             #Images
             image = cv2.imread(images_path + annotation["image"])
+            # Convert the image to HSV format
             image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-            image = torch.tensor(image, dtype=float)# (Y: 1080, X: 1920, RGB) (W,H,RGB) we do this to match with the bboxes coordinates (x,y)
+            #  (Y: 1080, X: 1920, RGB) (W,H,RGB) 
+            image = torch.tensor(image, dtype=float)
             (h, w) = image.shape[:2]
             image = (image * 2)/255. - 1 # normalization [-1, 1]
             images.append(image)
@@ -34,14 +37,6 @@ def import_data(annotations_path: str, images_path: str) -> Union[Tensor, Tensor
             y0 = ( bbox['y'] - bbox['height']/2. ) / h 
             x1 = ( bbox['x'] + bbox['width']/2. ) / w
             y1 = ( bbox['y'] + bbox['height']/2. ) / h
-            # print(y1)
-            # print(x0 * 1920, y0 * 1080, x1 *1920, y1*1080)
-            # print(image.shape)
-            # image = cv2.rectangle(image_cv, (int(x0 * 1920), int(y0 * 1080)), (int(x1 * 1920), int(y1 * 1080)), (0, 0, 255), 5)
-            # cv2.imshow('img', image_cv)
-            # cv2.waitKey(0)
-            # cv2.destroyAllWindows()
-            # sys.exit()
             bboxes.append((x0, y0, x1, y1))
 
     images = torch.stack(images)
@@ -60,3 +55,9 @@ def import_data(annotations_path: str, images_path: str) -> Union[Tensor, Tensor
         # Documentation on torch.stack, concatenates a sequence of tensors along a new dimension
     print(means, stds)
     return images, torch.tensor(bboxes), tuple(means), tuple(stds)
+
+class Transformations(transforms.Compose):
+    def __init__(self) -> None:
+        super().__init__()
+    def __call__(self, img):
+        return 

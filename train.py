@@ -74,10 +74,19 @@ images, bboxes, means, stds = import_data(
 )
 print(f'Using device: {config.DEVICE}')
 print(f'Creating Dataset')
+# probability of each transform is 0.5 by default
+transforms = transforms.Compose(
+    [
+        transforms.RandomAutocontrast(),
+        transforms.RandomAdjustSharpness(sharpness_factor=1.5),
+        transforms.ColorJitter(),
+        transforms.Normalize(means, stds)
+    ]
+)
 train_dataset = ds.ImageDataset(
     images,
     bboxes=bboxes,
-    transforms=transforms.Normalize(means, stds)
+    transforms=transforms
 )
 
 print(f'Creating dataloader')
