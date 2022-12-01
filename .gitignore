@@ -10,12 +10,10 @@
 # Built Visual Studio Code Extensions
 *.vsix
 *.pyc
-.frames/*.jpg
 *.mp4
 /frames/*
 *.log
 *.txt
 *.pth
-figures/*
 /__pycache__
 /.mypy_cache
