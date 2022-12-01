@@ -7,9 +7,13 @@
 
 # Local History for Visual Studio Code
 .history/
-./datasets/annotations/*
 # Built Visual Studio Code Extensions
 *.vsix
 *.pyc
-.frames/*.jpg
 *.mp4
+/frames/*
+*.log
+*.txt
+*.pth
+/__pycache__
+/.mypy_cache

@@ -1,0 +1,16 @@
+[
+    {
+        "image": "kang1006.jpg",
+        "annotations": [
+            {
+                "label": "ball",
+                "coordinates": {
+                    "x": 1229.9305555555554,
+                    "y": 140.5,
+                    "width": 22.0,
+                    "height": 25.0
+                }
+            }
+        ]
+    }
+]
