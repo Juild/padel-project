@@ -2,7 +2,7 @@ from torch import Tensor
 import sys
 sys.path.append("..")
 from model import config
-from model.model import BoxRegressor
+from model.model import BallClassifier
 from model import dataset as ds
 from torch.utils.data import DataLoader
 import os
@@ -18,7 +18,7 @@ def train_model(train_loader, loss_func, learning_rate, epochs, virtual_batches)
     resnet = resnet50(weights='DEFAULT')
     for param in resnet.parameters():
         param.requires_grad = False
-    model = BoxRegressor(base_model=resnet).to(config.DEVICE)
+    model = BallClassifier(base_model=resnet, num_classes=2).to(config.DEVICE)
 
     opt = torch.optim.Adam(model.parameters(), lr=learning_rate)
     train_loss = []
@@ -29,10 +29,10 @@ def train_model(train_loader, loss_func, learning_rate, epochs, virtual_batches)
         model.train()
         loss = 0
         batch_idx = 0
-        for (images, bboxes) in train_loader:
-            images, bboxes = images.to(config.DEVICE, dtype=torch.float), bboxes.to(config.DEVICE, torch.float)
-            predicted_bboxes: Tensor = model(images)
-            total_loss: Tensor = loss_func(predicted_bboxes, bboxes)
+        for (images, labels) in train_loader:
+            images, labels = images.to(config.DEVICE, dtype=torch.float), labels.type(torch.LongTensor).to(config.DEVICE)
+            predicted_labels: Tensor = model(images)
+            total_loss: Tensor = loss_func(predicted_labels, labels)
             loss += total_loss
             accum_itr += 1
             if accum_itr % virtual_batches == 0 or accum_itr == len(train_loader ) * train_loader.batch_size:
@@ -50,13 +50,13 @@ def  evaluate_model(model, loss_func, data_loader, device):
     with torch.no_grad():
         model.eval()
         eval_loss = 0
-        for images, bboxes in data_loader:
-            images, target_bboxes = images.to(device, dtype=torch.float), bboxes.to(device, dtype=torch.float)
+        for images, labels in data_loader:
+            images, target_labels = images.to(device, dtype=torch.float), labels.type(torch.LongTensor).to(device)
             # forward pass
-            predicted_bboxes: Tensor = model(images)
-            for box in predicted_bboxes:
-                 print(predicted_bboxes)
-            loss: Tensor = loss_func(predicted_bboxes, target_bboxes)
+            predicted_labels: Tensor = model(images)
+            for label in predicted_labels:
+                 print(torch.max(predicted_labels))
+            loss: Tensor = loss_func(predicted_labels, target_labels)
             eval_loss += loss
         loss_history.append(float(eval_loss))
 
@@ -78,34 +78,30 @@ print(f'Creating Dataset')
 # probability of each transform is 0.5 by default
 transforms = transforms.Compose(
     [
-        transforms.RandomAutocontrast(),
-        transforms.RandomAdjustSharpness(sharpness_factor=1.5),
-        transforms.ColorJitter(),
         transforms.Normalize(MEAN, STD)
     ]
 )
 train_dataset = ds.ImageDataset(
     images_with_ball,
     images_without_ball,
-    bboxes=bboxes,
     transforms=transforms
 )
 
 print(f'Creating dataloader')
 train_loader = DataLoader(
     train_dataset,
-    batch_size=1,
+    batch_size=32,
     shuffle=True,
-    num_workers=os.cpu_count(),
+    num_workers=(os.cpu_count() - 2),
     pin_memory=config.PIN_MEMORY
     )
 
 # x: features , y: targets
-loss_func = lambda x, y: generalized_box_iou_loss(x, y).mean()
+loss_func = torch.nn.CrossEntropyLoss()
 # Training
-epochs = 100
+epochs = 5
 batches = 32
-model, train_loss = train_model(train_loader, loss_func=loss_func, learning_rate=.01, epochs=epochs, virtual_batches=batches)
+model, train_loss = train_model(train_loader, loss_func=loss_func, learning_rate=.001, epochs=epochs, virtual_batches=batches)
 
 # Plot metrics
 plt.style.use('dark_background')

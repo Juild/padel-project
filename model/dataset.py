@@ -6,16 +6,20 @@ from torch.utils.data import Dataset
 from numpy import array
 
 class ImageDataset(Dataset):
-    def __init__(self, images_ball: List[Tensor], images_no_ball: Tensor, transforms=None, target_transforms=None) -> None:
+    def __init__(self, images_ball: List[Tensor], images_no_ball: List[Tensor], transforms=None, target_transforms=None) -> None:
         self.transforms = transforms
         self.target_transforms = target_transforms
-        self.images_ball: Tensor = images_ball
-        self.images_no_ball: Tensor = images_no_ball
-        self.images: Tensor = torch.concat()
-
+        self.n_images_ball = images_ball.shape[0]
+        self.n_images_no_ball = images_no_ball.shape[0]
+        self.images: Tensor = torch.concat((images_ball, images_no_ball))
+        self.labels = torch.Tensor([0, 1]) # we only have ball and background
+    
     def __getitem__(self, idx): 
         image = self.images[idx]
-        bbox = self.bboxes[idx]
+        if idx < self.n_images_ball:
+            label = self.labels[0]
+        else:
+            label = self.labels[1]
 
         #  All Pytorch models need their input to be "channel first"
         # i.e. TensorSize(C, H, W)
@@ -23,10 +27,8 @@ class ImageDataset(Dataset):
         if self.transforms:
             # Transform image
             self.transforms(image)
-        if self.target_transforms:
-            self.target_transforms()
 
-        return (image, bbox)
+        return (image, label)
 
     def __len__(self):
         # return the size of the first index in the stack of image tensors, i.e. the number of images tensors

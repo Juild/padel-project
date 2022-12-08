@@ -7,7 +7,6 @@ import os
 import json
 import numpy as np
 
-import cv2
 import random
 def remove_score_card(image):
     score_card_coordinates = (50, 80, 364, 187) #(x0, y0, x1, y1)
@@ -18,7 +17,6 @@ def remove_score_card(image):
                         thickness=-1 # filled rectangle
 
                         )
-    cv2.imwrite('score_card_removal_test.png', image)
     return image
 
 def split_image_into_chunks(image):
@@ -49,10 +47,11 @@ def draw_random_circles(images):
         chunks_with_ball.append(img)
 
    return chunks_with_ball 
-def import_data(images_path='../predictions/image0.jpg')
+
+def import_data(images_path='./predictions/image0.jpg'):
     image = cv2.imread(images_path)
     image = remove_score_card(image)
     image_chunks = split_image_into_chunks(image)
     chunks_without_ball = image_chunks.copy()
     chunks_with_ball = draw_random_circles(image_chunks)
-    return torch.tensor(chunks_with_ball), torch.tensor(chunks_without_ball)
+    return torch.Tensor(np.array(chunks_with_ball)), torch.Tensor(np.array(chunks_without_ball))
