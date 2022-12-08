@@ -69,6 +69,9 @@ def save_model(model, path):
 print(f'Using device: {config.DEVICE}')
 
 images_with_ball, images_without_ball = import_data()
+# Image net MEAN and STDS
+MEAN = [0.485, 0.456, 0.406]
+STD = [0.229, 0.224, 0.225]
 
 print(f'Using device: {config.DEVICE}')
 print(f'Creating Dataset')
@@ -78,11 +81,12 @@ transforms = transforms.Compose(
         transforms.RandomAutocontrast(),
         transforms.RandomAdjustSharpness(sharpness_factor=1.5),
         transforms.ColorJitter(),
-        # transforms.Normalize(means, stds)
+        transforms.Normalize(MEAN, STD)
     ]
 )
 train_dataset = ds.ImageDataset(
-    images,
+    images_with_ball,
+    images_without_ball,
     bboxes=bboxes,
     transforms=transforms
 )
