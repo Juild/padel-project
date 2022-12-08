@@ -1,30 +1,24 @@
 # imports
-from torch.nn import Identity, ReLU, Linear, Sequential, Sigmoid, Module
+from torch.nn import Identity, ReLU, Linear, Sequential, Sigmoid, Module, Dropout
 
 #TODO Define custom model
 class BoxRegressor(Module):
-    def __init__(self, base_model) -> None:
+    def __init__(self, base_model, num_classes) -> None:
         super().__init__()
+        self.num_classes = num_classes
         self.base_model = base_model
-        self.regressor = Sequential(
+        self.classifier = Sequential(
 			Linear(base_model.fc.in_features, 512),
 			ReLU(),
-			Linear(512, 256),
+			Dropout(),
+			Linear(512, 512),
 			ReLU(),
-			Linear(256, 128),
-			ReLU(),
-			Linear(128, 64),
-            ReLU(),
-            Linear(64, 32),
-            ReLU(),
-            Linear(32, 8),
-            ReLU(),
-            Linear(8,4),
-			Sigmoid()
+			Dropout(),
+			Linear(512, self.num_classes)
 		)
         self.base_model.fc = Identity()
 
     def forward(self, x):
         x = self.base_model(x)
-        x = self.regressor(x)
+        x = self.classifier(x)
         return x
