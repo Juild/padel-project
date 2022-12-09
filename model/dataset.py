@@ -12,7 +12,7 @@ class ImageDataset(Dataset):
         self.n_images_ball = images_ball.shape[0]
         self.n_images_no_ball = images_no_ball.shape[0]
         self.images: Tensor = torch.concat((images_ball, images_no_ball))
-        self.labels = torch.Tensor([0, 1]) # we only have ball and background
+        self.labels = torch.Tensor([1, 0]) # we only have ball and background
     
     def __getitem__(self, idx): 
         image = self.images[idx]
@@ -28,7 +28,7 @@ class ImageDataset(Dataset):
             # Transform image
             self.transforms(image)
 
-        return (image, label)
+        return image, label
 
     def __len__(self):
         # return the size of the first index in the stack of image tensors, i.e. the number of images tensors

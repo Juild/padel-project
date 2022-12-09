@@ -6,7 +6,7 @@ import cv2
 import os
 import json
 import numpy as np
-
+import copy
 import random
 def remove_score_card(image):
     score_card_coordinates = (50, 80, 364, 187) #(x0, y0, x1, y1)
@@ -48,10 +48,18 @@ def draw_random_circles(images):
 
    return chunks_with_ball 
 
+#TODO 
+#(1. Create frames again, in this case we don't
+# need to have all, but we could use more than one
+# 2. Get images in BGR  and draw circles
+# 3. After this processing, turn it into HSV values)
 def import_data(images_path='./predictions/image0.jpg'):
     image = cv2.imread(images_path)
     image = remove_score_card(image)
     image_chunks = split_image_into_chunks(image)
-    chunks_without_ball = image_chunks.copy()
+    # We do a deep copy, otherwise it just gets the same reference of the objects
+    # which means that both lists (with and without circles) will share the
+    # reference to the same object so both lists will be the same.
+    chunks_without_ball = copy.deepcopy(image_chunks) 
     chunks_with_ball = draw_random_circles(image_chunks)
     return torch.Tensor(np.array(chunks_with_ball)), torch.Tensor(np.array(chunks_without_ball))
