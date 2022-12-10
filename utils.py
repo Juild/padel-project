@@ -3,11 +3,31 @@ from torch import Tensor
 from torchvision import transforms
 import torch
 import cv2
-import os
-import json
 import numpy as np
 import copy
 import random
+import os
+
+def extract_frames(video_path: str):
+
+    # Open the video file
+    video = cv2.VideoCapture(video)
+
+    # Get the total number of frames in the video
+    total_frames = video.get(cv2.CAP_PROP_FRAME_COUNT)
+    print(total_frames)
+    # Iterate over the frames and save each one to a separate image file
+    for frame_num in range(int(total_frames)):
+        # Read the current frame
+        _, frame = video.read()
+        
+        # Save the current frame as an image file
+        cv2.imwrite("frame_{}.jpg".format(frame_num), frame)
+
+    # Close the video file
+    video.release()
+
+
 def remove_score_card(image):
     score_card_coordinates = (50, 80, 364, 187) #(x0, y0, x1, y1)
     image = cv2.rectangle(image,
@@ -48,18 +68,38 @@ def draw_random_circles(images):
 
    return chunks_with_ball 
 
-#TODO 
-#(1. Create frames again, in this case we don't
-# need to have all, but we could use more than one
-# 2. Get images in BGR  and draw circles
-# 3. After this processing, turn it into HSV values)
-def import_data(images_path='./predictions/image0.jpg'):
-    image = cv2.imread(images_path)
-    image = remove_score_card(image)
-    image_chunks = split_image_into_chunks(image)
-    # We do a deep copy, otherwise it just gets the same reference of the objects
-    # which means that both lists (with and without circles) will share the
-    # reference to the same object so both lists will be the same.
-    chunks_without_ball = copy.deepcopy(image_chunks) 
-    chunks_with_ball = draw_random_circles(image_chunks)
-    return torch.Tensor(np.array(chunks_with_ball)), torch.Tensor(np.array(chunks_without_ball))
+
+def import_data(images_path='./frames/'):
+    all_chunks_with_ball = []
+    all_chunks_no_ball = []
+    for image_file_name in os.listdir(images_path):
+        print(image_file_name)
+        image = cv2.imread(images_path + image_file_name)
+        image = remove_score_card(image)
+        image_chunks = split_image_into_chunks(image)
+        # We do a deep copy, otherwise it just gets the same reference of the objects
+        # which means that both lists (with and without circles) will share the
+        # reference to the same object so both lists will be the same.
+        chunks_without_ball = copy.deepcopy(image_chunks) 
+        chunks_with_ball = draw_random_circles(image_chunks)
+        all_chunks_with_ball.append(chunks_with_ball)
+        all_chunks_no_ball.append(chunks_without_ball)
+
+    all_chunks_with_ball = torch.Tensor(np.array(all_chunks_with_ball))
+    all_chunks_no_ball = torch.Tensor(np.array(all_chunks_no_ball))
+    print(all_chunks_no_ball.shape)
+
+    all_chunks_with_ball = all_chunks_with_ball.reshape(
+        all_chunks_with_ball.shape[0] * all_chunks_with_ball.shape[1],
+        all_chunks_with_ball.shape[2],
+        all_chunks_with_ball.shape[3],
+        all_chunks_with_ball.shape[4],
+        
+    )
+    all_chunks_no_ball = all_chunks_no_ball.reshape(
+        all_chunks_no_ball.shape[0] * all_chunks_no_ball.shape[1],
+        all_chunks_no_ball.shape[2],
+        all_chunks_no_ball.shape[3],
+        all_chunks_no_ball.shape[4],
+    )
+    return all_chunks_with_ball, all_chunks_no_ball
