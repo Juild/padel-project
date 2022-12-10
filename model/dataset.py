@@ -19,7 +19,7 @@ class ImageDataset(Dataset):
     def __getitem__(self, idx): 
         image = self.images[idx]
         if idx < self.n_images_ball:
-            label = self.labels[0]
+            label = self.labels[0] # ball has label "1"
         else:
             label = self.labels[1]
 

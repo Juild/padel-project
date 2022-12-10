@@ -14,7 +14,7 @@ from torchvision.ops import generalized_box_iou_loss
 from torch.nn.functional import mse_loss
 import matplotlib.pyplot as plt
 
-def train_model(train_loader, loss_func, learning_rate, epochs):
+def train_model(train_loader, loss_func, learning_rate, EPOCHS):
     resnet = resnet50(weights='DEFAULT')
     for param in resnet.parameters():
         param.requires_grad = False
@@ -22,8 +22,7 @@ def train_model(train_loader, loss_func, learning_rate, epochs):
 
     opt = torch.optim.Adam(model.parameters(), lr=learning_rate)
     train_loss = []
-    # Number of "virtual batches"
-    for epoch in range(epochs):
+    for epoch in range(EPOCHS):
         print(f'Epoch: {epoch}')
         model.train()
         loss = 0
@@ -66,7 +65,8 @@ def save_model(model, path):
 
 print(f'Using device: {config.DEVICE}')
 
-images_with_ball, images_without_ball = import_data()
+images_with_ball, images_without_ball = import_data(images_path='./datasets/training_dataset/')
+
 # Image net MEAN and STDS
 MEAN = [0.485, 0.456, 0.406]
 STD = [0.229, 0.224, 0.225]
@@ -74,48 +74,47 @@ STD = [0.229, 0.224, 0.225]
 print(f'Using device: {config.DEVICE}')
 print(f'Creating Dataset')
 # probability of each transform is 0.5 by default
-transforms = transforms.Compose(
-    [
-        transforms.Normalize(MEAN, STD)
-    ]
-)
+# transforms = transforms.Compose(
+#     [
+#         transforms.Normalize(MEAN, STD)
+#     ]
+# )
 train_dataset = ds.ImageDataset(
     images_with_ball,
     images_without_ball,
-    transforms=transforms
+    transforms=None
 )
-batches = 512
+BATCHES = 512
 print(f'Creating dataloader')
 train_loader = DataLoader(
     train_dataset,
-    batch_size=batches,
+    batch_size=BATCHES,
     shuffle=True,
     num_workers=(os.cpu_count() - 2),
     pin_memory=config.PIN_MEMORY
     )
 
-# x: features , y: targets
 loss_func = torch.nn.CrossEntropyLoss()
 # Training
-epochs = 20
+EPOCHS = 20
 model, train_loss = train_model(
     train_loader,
     loss_func=loss_func,
     learning_rate=.001,
-    epochs=epochs
+    EPOCHS=EPOCHS
     )
 
 # Plot metrics
 plt.style.use('dark_background')
-plt.xlabel('Epochs')
+plt.xlabel('EPOCHS')
 plt.ylabel('Training loss')
-plt.plot(list(range(epochs)),train_loss)
-plt.savefig(f'./figures/training_loss_history_{epochs}_{batches}.png')
+plt.plot(list(range(EPOCHS)),train_loss)
+plt.savefig(f'./figures/training_loss_history_{EPOCHS}_{BATCHES}.png')
 
 # Evaluation
 evaluate_model(model, loss_func=loss_func, data_loader=train_loader, device=config.DEVICE)
 # Model saving
-save_model(model, './box_regressor.pth')
+save_model(model, './model.pth')
 
 
 
