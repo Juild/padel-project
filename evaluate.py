@@ -41,7 +41,6 @@ for d in possible_balls:
 # we sort the list by the highest energy
 possible_balls.sort(reverse=True, key=lambda x: x['energy'])
 print(possible_balls)
-print(predictions[395], energies[395])
 for i in range(20):
     predicted_chunk = image[possible_balls[i]['idx']]
     predicted_chunk = predicted_chunk.numpy().astype(np.uint8)

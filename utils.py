@@ -43,7 +43,7 @@ def split_image_into_chunks(image):
     # Ball radius should be between 5 and 10 pixels, so I would start by making the chunks 60x60 pixels
     # Split the image into 20x20 pixel subimages
     width, height = image.shape[:2]
-    split_into = 60
+    split_into = 120
     subimages = [image[i:i+split_into, j:j+split_into] for i in range(0, width, split_into) for j in range(0, height, split_into)]
     return subimages
     

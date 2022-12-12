@@ -10,7 +10,6 @@ class ImageDataset(Dataset):
         self.transforms = transforms
         self.target_transforms = target_transforms
         print(images_ball.shape)
-        assert images_ball.shape[1:] == (60, 60, 3), "Image shape not correct"
         self.n_images_ball = images_ball.shape[0]
         self.n_images_no_ball = images_no_ball.shape[0]
         self.images: Tensor = torch.concat((images_ball, images_no_ball))

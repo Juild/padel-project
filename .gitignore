@@ -11,7 +11,7 @@
 *.vsix
 *.pyc
 *.mp4
-/frames/*
+/datasets/frames/*
 *.log
 *.txt
 *.pth
