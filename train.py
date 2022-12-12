@@ -36,9 +36,9 @@ def train_model(train_loader, loss_func, learning_rate, epochs, virtual_batches)
             loss += total_loss
             accum_itr += 1
             if accum_itr % virtual_batches == 0 or accum_itr == len(train_loader ) * train_loader.batch_size:
+                opt.zero_grad()
                 print(f'Loss: {float(total_loss)}')
                 total_loss.backward()
-                opt.zero_grad()
                 opt.step()
         train_loss.append(loss)
 
@@ -77,9 +77,9 @@ print(f'Creating Dataset')
 # probability of each transform is 0.5 by default
 transforms = transforms.Compose(
     [
-        transforms.RandomAutocontrast(),
-        transforms.RandomAdjustSharpness(sharpness_factor=1.5),
-        transforms.ColorJitter(),
+        # transforms.RandomAutocontrast(),
+        # transforms.RandomAdjustSharpness(sharpness_factor=1.5),
+        # transforms.ColorJitter(),
         transforms.Normalize(means, stds)
     ]
 )
@@ -89,7 +89,7 @@ train_dataset = ds.ImageDataset(
     transforms=transforms
 )
 
-print(f'Creating dataloader')
+print('Creating dataloader')
 train_loader = DataLoader(
     train_dataset,
     batch_size=1,
