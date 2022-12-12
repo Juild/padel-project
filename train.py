@@ -69,8 +69,8 @@ def save_model(model, path):
 print(f'Using device: {config.DEVICE}')
 
 images, bboxes, means, stds = import_data(
-    annotations_path="./datasets/annotations_yolo/",
-    images_path="./frames/",
+    annotations_path="./datasets/annotations/",
+    images_path="./datasets/frames/",
 )
 print(f'Using device: {config.DEVICE}')
 print(f'Creating Dataset')
@@ -99,9 +99,9 @@ train_loader = DataLoader(
     )
 
 # x: features , y: targets
-loss_func = lambda x, y: generalized_box_iou_loss(x, y).mean()
+loss_func = lambda x, y: mse_loss(x, y) + generalized_box_iou_loss(x, y).mean()
 # Training
-epochs = 100
+epochs = 10
 batches = 32
 model, train_loss = train_model(train_loader, loss_func=loss_func, learning_rate=.01, epochs=epochs, virtual_batches=batches)
 

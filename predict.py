@@ -8,7 +8,7 @@ import numpy as np
 model = torch.load('./box_regressor.pth')
 model.to(config.DEVICE)
 import cv2
-images, boxes, means, stds = import_data(annotations_path='./datasets/annotations_yolo/', images_path='./frames/')
+images, boxes, means, stds = import_data(annotations_path='./datasets/annotations/', images_path='./datasets/frames/')
 # We created a dataset for predicting too, the reason for this is to make sure that 
 # all the transformations and manipulations done to the predict data are the same as the ones in the training data
 # Doing it "by hand" even if it's more lightweight (as we don't create a dataset object) can be prone to errors
