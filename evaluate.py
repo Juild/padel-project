@@ -7,7 +7,7 @@ from utils import import_test_image
 import cv2
 import numpy as np
 
-image: Tensor = import_test_image(image_path='./datasets/frames/frame_4008.jpg')
+image: Tensor = import_test_image(image_path='./datasets/frames/frame_5660.jpg')
 
 # (n_chunks, height, width, BGR)
 
@@ -41,7 +41,7 @@ for d in possible_balls:
 # we sort the list by the highest energy
 possible_balls.sort(reverse=True, key=lambda x: x['energy'])
 print(possible_balls)
-for i in range(20):
+for i in range(sum(predictions)):
     predicted_chunk = image[possible_balls[i]['idx']]
     predicted_chunk = predicted_chunk.numpy().astype(np.uint8)
     cv2.imwrite(f'./predictions/prediction_{i}.jpg', predicted_chunk)

@@ -1,6 +1,7 @@
 from torch import Tensor
 import sys
 sys.path.append("..")
+from utils import show_image
 from model import config
 from model.model import BallClassifier
 from model import dataset as ds
@@ -84,6 +85,8 @@ train_dataset = ds.ImageDataset(
     images_without_ball,
     transforms=None
 )
+
+    
 BATCHES = 512
 print(f'Creating dataloader')
 train_loader = DataLoader(
@@ -96,7 +99,7 @@ train_loader = DataLoader(
 
 loss_func = torch.nn.CrossEntropyLoss()
 # Training
-EPOCHS = 20
+EPOCHS = 10
 model, train_loss = train_model(
     train_loader,
     loss_func=loss_func,

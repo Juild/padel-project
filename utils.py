@@ -8,6 +8,30 @@ import copy
 import random
 import os
 
+def eliminate_borders(image):
+    color = (0, 0, 0)
+    image = cv2.rectangle(image,(0,0),(180,1080), color, thickness=-1)
+    image = cv2.rectangle(image,(1920-180, 0),(1920,1080), color, thickness=-1)
+    image = cv2.rectangle(image,(0, 980),(1920,1080), color, thickness=-1)
+    pts1 = np.array([[0,0],[0,700],[650, 0]], np.int32)
+    pts2 = np.array([[1920,0],[1920,700],[1920 - 650, 0]], np.int32)
+
+    image = cv2.fillPoly(image,[pts1], color)
+    image = cv2.fillPoly(image,[pts2], color)
+    return image
+def review_images(train_dataset):
+    for i in range(len(train_dataset)):
+        image, label = train_dataset[i]
+        image = image.permute(1, 2, 0).numpy()
+        print(image.shape)
+        show_image(image)
+
+def show_image(image):
+    image = image.astype(np.uint8)
+    cv2.imshow('img', image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
 def extract_frames(video_path: str):
 
     # Open the video file
@@ -43,8 +67,12 @@ def split_image_into_chunks(image):
     # Ball radius should be between 5 and 10 pixels, so I would start by making the chunks 60x60 pixels
     # Split the image into 20x20 pixel subimages
     width, height = image.shape[:2]
-    split_into = 120
-    subimages = [image[i:i+split_into, j:j+split_into] for i in range(0, width, split_into) for j in range(0, height, split_into)]
+    split_into = 60
+    distance_betw_boxes = 15
+    subimages = [image[i:i+split_into, j:j+split_into] 
+    for i in range(0, width - split_into, distance_betw_boxes)
+    for j in range(0, height - split_into, distance_betw_boxes)
+    ]
     return subimages
     
 def draw_random_circles(images):
@@ -57,17 +85,25 @@ def draw_random_circles(images):
         y = random.randint(0, height)
 
         # generate a random radius for the circle
-        radius = random.randint(5, 10)
+        radius = random.randint(3,5)
 
         # set the color of the circle to a color similar to a tennis ball
-        color = (0, 255, 200)
-
+        # color = (0, 255, 200)
+        
+        color = (157 + random.randint(-25, 25), 255 + random.randint(-25, 25), 213 + random.randint(-25, 25))
+        # show_image(img)
         # draw the circle on the image
         cv2.circle(img, (x, y), radius, color, thickness=-1)
+        if random.randint(0,1) == 1:
+            while True:
+                dx, dy  = random.randint(-5, 5), random.randint(-5, 5)
+                if x + dx > 0 and y + dy > 0:
+                    break
+            cv2.circle(img, (x + dx, y + dy), radius, color, thickness=-1)
+        # show_image(img)
+            
         chunks_with_ball.append(img)
-
-   return chunks_with_ball 
-
+   return chunks_with_ball
 def blur_images(chunks1, chunks2):
     kernel = np.ones((5, 5), dtype=np.float32)/25
     print(type(chunks2[0]))
@@ -124,6 +160,8 @@ def import_data(images_path: str):
 
 def import_test_image(image_path: str):
     image = cv2.imread(image_path)
-    image = remove_score_card(image)
+    # image = remove_score_card(image)
+    image = eliminate_borders(image)
+    show_image(image)
     image_chunks = split_image_into_chunks(image)
     return torch.Tensor( np.array(image_chunks) )
